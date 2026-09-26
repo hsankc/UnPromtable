@@ -2,10 +2,11 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { parseEther } from "viem";
 import { Check, Download, Upload } from "lucide-react";
 import { PageHead, Panel, Notice } from "@/components/app/ui";
-import { DecisionTag } from "@/components/ui/DecisionTag";
 import { CipherCard } from "@/components/ui/CipherCard";
+import { FilterBuilder } from "@/components/contractx/FilterBuilder";
 import { useWallet } from "@/components/wallet/WalletProvider";
 import { useContractX } from "@/lib/useContractX";
 import { useModelCart } from "@/lib/cart";
@@ -15,8 +16,8 @@ import { CONVERSION_FEE_WEI, TREASURY } from "@/lib/deployments";
 import { formatMon } from "@/lib/format";
 import styles from "./page.module.css";
 
-const STEPS = ["Kaynağı ver", "Ön kontrol", "Öde", "Dönüşüm"] as const;
-const phaseStep: Record<string, number> = { input: 0, checking: 0, checked: 1, paying: 2, "confirming-payment": 2, converting: 3, done: 3, error: 1 };
+const STEPS = ["Kaynağı ver", "Ön kontrol", "Filtreleme", "Öde", "Dönüşüm"] as const;
+const phaseStep: Record<string, number> = { input: 0, checking: 0, converting: 4, done: 4 };
 
 export default function GetirPage() {
   const w = useWallet();
@@ -25,7 +26,21 @@ export default function GetirPage() {
   const router = useRouter();
   const [source, setSource] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
-  const step = phaseStep[cx.phase] ?? 0;
+  const [filtersConfirmed, setFiltersConfirmed] = useState(false);
+  const [filterFeeMon, setFilterFeeMon] = useState(0);
+
+  const atPaymentStep = filtersConfirmed || cx.phase === "paying" || cx.phase === "confirming-payment";
+  let step = phaseStep[cx.phase] ?? 1;
+  if (cx.phase === "checked" || cx.phase === "error") step = atPaymentStep ? 3 : 2;
+  if (cx.phase === "paying" || cx.phase === "confirming-payment") step = 3;
+
+  const totalWei = CONVERSION_FEE_WEI + (filterFeeMon > 0 ? parseEther(filterFeeMon.toFixed(4)) : 0n);
+
+  const changeSource = () => {
+    cx.reset();
+    setFiltersConfirmed(false);
+    setFilterFeeMon(0);
+  };
 
   const onFile = async (file: File) => {
     setSource(await file.text());
@@ -52,7 +67,7 @@ export default function GetirPage() {
     <>
       <PageHead title="Kontratını getir">
         Kendi kontratının kaynağını yapıştır, MON gönderen satırları bul, korunan versiyonunu al. Ön kontrol ücretsiz;
-        dönüşüm 0,01 MON.
+        dönüşüm en az {formatMon(CONVERSION_FEE_WEI)} MON, seçtiğin koruma filtrelerine göre artabilir.
       </PageHead>
 
       <ol className={styles.stepper}>
@@ -91,7 +106,7 @@ export default function GetirPage() {
         </Panel>
       ) : (
         <div className={styles.stack}>
-          <Panel title="Ön kontrol" aside={<button type="button" className="caption" onClick={cx.reset}>Kaynağı değiştir</button>}>
+          <Panel title="Ön kontrol" aside={<button type="button" className="caption" onClick={changeSource}>Kaynağı değiştir</button>}>
             {cx.precheck && (
               <>
                 {cx.precheck.compile.ok ? (
@@ -117,11 +132,23 @@ export default function GetirPage() {
             )}
           </Panel>
 
-          {(cx.phase === "checked" || cx.phase === "paying" || cx.phase === "confirming-payment" || cx.phase === "error") && (
+          {cx.phase === "checked" && !atPaymentStep && (
+            <FilterBuilder
+              source={source}
+              onContinue={(totalMon) => {
+                setFilterFeeMon(totalMon);
+                setFiltersConfirmed(true);
+              }}
+            />
+          )}
+
+          {(atPaymentStep || cx.phase === "error") && (
             <Panel title="Öde ve dönüştür">
               <p className="body muted">
-                Dönüşüm ücreti <strong className="num">{formatMon(CONVERSION_FEE_WEI)} MON</strong> → hazine (
-                <span className="mono">{TREASURY.slice(0, 8)}…</span>). Sunucu bu ödemeyi zincirde görmeden ContractX üretmez.
+                Toplam <strong className="num">{formatMon(totalWei)} MON</strong> → hazine (
+                <span className="mono">{TREASURY.slice(0, 8)}…</span>): {formatMon(CONVERSION_FEE_WEI)} MON dönüşüm ücreti
+                {filterFeeMon > 0 && <> + {filterFeeMon.toFixed(3)} MON seçili filtreler</>}. Sunucu bu ödemeyi zincirde
+                görmeden ContractX üretmez.
               </p>
               {!w.address && <Notice>Ödeme yapmak için önce cüzdanını bağla.</Notice>}
               {cx.phase === "paying" && <Notice>Cüzdanında onay bekleniyor…</Notice>}
@@ -131,10 +158,10 @@ export default function GetirPage() {
                 type="button"
                 className="krom-btn krom-btn--glow"
                 disabled={!w.address || !cx.precheck?.compile.ok || cx.phase === "paying" || cx.phase === "confirming-payment"}
-                onClick={() => cx.payAndConvert(source)}
+                onClick={() => cx.payAndConvert(source, totalWei)}
                 style={{ marginTop: "var(--space-4)" }}
               >
-                <span>{formatMon(CONVERSION_FEE_WEI)} MON öde ve dönüştür</span>
+                <span>{formatMon(totalWei)} MON öde ve dönüştür</span>
               </button>
               {cx.payTxHash && (
                 <p className={styles.payTx}>

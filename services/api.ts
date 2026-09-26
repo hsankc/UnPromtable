@@ -6,7 +6,7 @@ import { publicClient } from "./lib/rpc.js";
 import { registryV2Abi } from "./lib/abis.js";
 import { overview, recentDecisions, revenueView, startIndexer, status, vaultView } from "./indexer.js";
 import { compileVault, maskOfKeys } from "./build.js";
-import { classifyFindings, compileArbitrary, patchSource, scanPayments, sourceLabel } from "./contractx.js";
+import { classifyFindings, compileArbitrary, patchSource, scanPayments, sourceLabel, suggestFilters } from "./contractx.js";
 
 /**
  * HTTP API for the web app (proxied by Next under /svc). Read endpoints
@@ -82,6 +82,13 @@ route("POST", /^\/contractx\/convert$/, async (req) => {
   const suggestedMask = maskOfKeys(classified.filter((f) => f.supported && f.category).map((f) => f.category!));
 
   return { findings: classified, purpose, additionalConcerns, patchedSource, patchedCompile, suggestedMask };
+});
+
+route("POST", /^\/contractx\/filters$/, async (req) => {
+  const { source, description } = await readJson<{ source: string; description?: string }>(req);
+  if (!source) throw new HttpError(400, "source gerekli.");
+  const filters = await suggestFilters(source, description ?? "");
+  return { filters };
 });
 
 function send(res: ServerResponse, code: number, body: unknown) {

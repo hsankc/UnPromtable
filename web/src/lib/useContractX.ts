@@ -39,6 +39,17 @@ export interface PrecheckResult {
   sourceHash: Hex;
 }
 
+export interface SuggestedFilter {
+  id: string;
+  name: string;
+  description: string;
+  recommended: boolean;
+  hasValue: boolean;
+  valueLabel?: string;
+  suggestedValue?: string;
+  feeMon: number;
+}
+
 export interface ConvertResult {
   findings: ClassifiedFinding[];
   purpose: string;
@@ -63,6 +74,9 @@ export function useContractX() {
   const [precheck, setPrecheck] = useState<PrecheckResult>();
   const [result, setResult] = useState<ConvertResult>();
   const [payTxHash, setPayTxHash] = useState<Hex>();
+  const [filters, setFilters] = useState<SuggestedFilter[]>();
+  const [filtersLoading, setFiltersLoading] = useState(false);
+  const [filtersError, setFiltersError] = useState<string>();
 
   async function check(source: string) {
     setPhase("checking");
@@ -78,7 +92,7 @@ export function useContractX() {
     }
   }
 
-  async function payAndConvert(source: string) {
+  async function payAndConvert(source: string, valueWei: bigint = CONVERSION_FEE_WEI) {
     const client = w.walletClient();
     if (!client || !w.address) {
       setError("Önce cüzdanını bağla.");
@@ -101,7 +115,7 @@ export function useContractX() {
           abi: registryV2Abi,
           functionName: "payConversion",
           args: [precheck.sourceHash],
-          value: CONVERSION_FEE_WEI,
+          value: valueWei > CONVERSION_FEE_WEI ? valueWei : CONVERSION_FEE_WEI,
           chain: client.chain,
           account: client.account!,
         });
@@ -124,19 +138,45 @@ export function useContractX() {
     }
   }
 
+  async function loadFilters(source: string, description: string) {
+    setFiltersLoading(true);
+    setFiltersError(undefined);
+    try {
+      const r = await api<{ filters: SuggestedFilter[] }>("/contractx/filters", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ source, description }),
+      });
+      setFilters(r.filters);
+    } catch (err) {
+      setFiltersError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setFiltersLoading(false);
+    }
+  }
+
   return {
     phase,
     error,
     precheck,
     result,
     payTxHash,
+    filters,
+    filtersLoading,
+    filtersError,
     check,
     payAndConvert,
+    loadFilters,
+    clearFilters: () => {
+      setFilters(undefined);
+      setFiltersError(undefined);
+    },
     reset: () => {
       setPhase("input");
       setPrecheck(undefined);
       setResult(undefined);
       setError(undefined);
+      setFilters(undefined);
     },
   };
 }

@@ -331,15 +331,20 @@ export function patchSource(source: string, classified: ClassifiedFinding[]): st
   for (const [lineNo, fs] of byLine) {
     let text = lines[lineNo - 1];
     for (const f of fs) {
-      const replacement = `IUnpromptableGuard(UNPROMPTABLE_GUARD).${f.entry}(payable(${f.toExpr}), ${f.amountExpr})`;
-      const patterns = [
-        new RegExp(escapeRe(`${f.toExpr}.transfer(${f.amountExpr})`)),
-        new RegExp(escapeRe(`${f.toExpr}.send(${f.amountExpr})`)),
+      const guardCall = `IUnpromptableGuard(UNPROMPTABLE_GUARD).${f.entry}(payable(${f.toExpr}), ${f.amountExpr})`;
+      // .transfer() returns nothing — a bare statement, safe to swap in as-is.
+      // .send() returns bool and is almost always used as one (assigned,
+      // require()'d, if()'d) — proposeX() returns a uint8 decision instead
+      // (0 = paid), so it has to be coerced back to the bool the caller
+      // expects, or the patched file won't even compile.
+      const patterns: [RegExp, string][] = [
+        [new RegExp(escapeRe(`${f.toExpr}.transfer(${f.amountExpr})`)), guardCall],
+        [new RegExp(escapeRe(`${f.toExpr}.send(${f.amountExpr})`)), `(${guardCall} == 0)`],
       ];
       let replaced = false;
-      for (const re of patterns) {
+      for (const [re, repl] of patterns) {
         if (re.test(text)) {
-          text = text.replace(re, replacement);
+          text = text.replace(re, repl);
           replaced = true;
           break;
         }
@@ -347,7 +352,7 @@ export function patchSource(source: string, classified: ClassifiedFinding[]): st
       if (!replaced) {
         // .call{value: ...}(...) has too many shapes to reconstruct exactly;
         // splice the guard call in as the statement and comment the original out.
-        text = `${text} /* UnpromptableGuard: ${replacement}; — call{value:} orijinali yorumlandı, elle uygula */`;
+        text = `${text} /* UnpromptableGuard: ${guardCall}; — call{value:} orijinali yorumlandı, elle uygula */`;
       }
     }
     lines[lineNo - 1] = text;
@@ -365,4 +370,101 @@ function escapeRe(s: string): string {
 
 export function sourceLabel(source: string): string {
   return crypto.createHash("sha256").update(source).digest("hex").slice(0, 16);
+}
+
+// ---------- filter suggestions ----------
+
+export interface SuggestedFilter {
+  id: string;
+  name: string;
+  description: string;
+  recommended: boolean;
+  hasValue: boolean;
+  valueLabel?: string;
+  suggestedValue?: string;
+  feeMon: number;
+}
+
+const FILTER_FALLBACK: SuggestedFilter[] = [
+  { id: "max_tx_pct", name: "Tek işlem tavanı", description: "Bir işlemde kasanın en fazla şu yüzdesi çıkabilir.", recommended: true, hasValue: true, valueLabel: "Yüzde (%)", suggestedValue: "20", feeMon: 6 },
+  { id: "daily_unknown_pct", name: "Tanınmayana günlük bütçe", description: "Tanınmayan adreslere günde en fazla şu yüzde gidebilir.", recommended: true, hasValue: true, valueLabel: "Yüzde (%)", suggestedValue: "1", feeMon: 6 },
+  { id: "min_amount", name: "Minimum tutar", description: "Bu tutarın altındaki işlemler otomatik reddedilir (toz/spam koruması).", recommended: false, hasValue: true, valueLabel: "MON", suggestedValue: "0.0001", feeMon: 5 },
+  { id: "allowlist_only", name: "Sadece onaylı adresler", description: "Owner'ın önceden onaylamadığı adreslere hiç ödeme yapılmaz.", recommended: false, hasValue: false, feeMon: 12 },
+  { id: "delay_all", name: "Her ödemeyi bekletme", description: "Tutar ne olursa olsun her ödeme owner onayı için bekletilir.", recommended: false, hasValue: true, valueLabel: "Bekleme (dakika)", suggestedValue: "10", feeMon: 9 },
+];
+
+function buildFilterPrompt(source: string, description: string): string {
+  return `Bir Solidity kontratı ve sahibinin onu ne için kullanacağına dair açıklaması aşağıda. Bu kontratın
+ödemelerini "Unpromptable" adlı bir kasa korumasına bağlayacağız. Görevin: bu spesifik kontrata ve
+kullanım amacına göre, gerçekten anlamlı olacak koruma filtrelerinin bir listesini önermek —
+jenerik bir liste değil, BU kontrata özel (örnek: kontrat büyük tek seferlik hibe yapıyorsa "tek işlem
+tavanı"nı düşük öner; sık küçük ödeme yapıyorsa "minimum tutar" öner; kontratta zaten bir onlyOperator
+varsa "sadece onaylı adresler" özellikle mantıklı olabilir).
+
+Her filtre için: KISA isim (2-4 kelime), TEK KISA cümle açıklama (en fazla 15 kelime), varsayılan olarak
+önerilir mi (recommended), sayısal bir değer gerektirir mi (hasValue) ve gerekiyorsa KONTRATIN
+İÇERİĞİNE göre makul bir varsayılan değer (suggestedValue), ve zorluğuna göre bir MON ücreti (feeMon —
+basit açık/kapalı 5-8, eşik/sayısal 8-14, davranışsal/karmaşık 14-20 aralığında, gerçekçi ondalık, örn. 7.5).
+
+Kontrat kaynağı:
+---
+${source.slice(0, 15_000)}
+---
+
+Kullanıcının açıklaması: "${description || "(açıklama verilmedi, sadece kontrata bak)"}"
+
+TAM OLARAK 5 filtre öner, ne fazla ne eksik — kısa ve öz ol, uzun açıklama yazma. Sadece şu JSON
+dizisini döndür, başka metin yazma (ne önce ne sonra):
+[{"id": "<kısa_snake_case_id>", "name": "<Türkçe isim, kısa>", "description": "<tek kısa cümle>", "recommended": <true|false>, "hasValue": <true|false>, "valueLabel": "<varsa birim/etiket>", "suggestedValue": "<varsa, string>", "feeMon": <sayı>}]`;
+}
+
+function extractJsonArray(text: string): string {
+  const start = text.indexOf("[");
+  if (start < 0) throw new Error("yanıtta JSON dizisi yok");
+  let depth = 0;
+  let inString = false;
+  let escape = false;
+  for (let i = start; i < text.length; i++) {
+    const c = text[i];
+    if (inString) {
+      if (escape) escape = false;
+      else if (c === "\\") escape = true;
+      else if (c === '"') inString = false;
+      continue;
+    }
+    if (c === '"') inString = true;
+    else if (c === "[") depth++;
+    else if (c === "]") {
+      depth--;
+      if (depth === 0) return text.slice(start, i + 1);
+    }
+  }
+  throw new Error("yanıttaki JSON dizisi kapanmıyor");
+}
+
+/**
+ * Claude reads the contract PLUS the owner's own description of what it's
+ * for, and proposes a tailored list of protective filters — not a static
+ * menu. Real Claude call, real per-contract reasoning; the fallback (Claude
+ * unavailable) is a small generic list so the step never just breaks.
+ */
+export async function suggestFilters(source: string, description: string): Promise<SuggestedFilter[]> {
+  const apiKey = process.env.CLAUDE_API_KEY;
+  if (!apiKey) return FILTER_FALLBACK;
+  try {
+    const client = new Anthropic({ apiKey });
+    const message = await client.messages.create({
+      model: process.env.CLAUDE_MODEL ?? "claude-sonnet-5",
+      max_tokens: 1600,
+      messages: [{ role: "user", content: buildFilterPrompt(source, description) }],
+    });
+    if (message.stop_reason === "max_tokens") throw new Error("max_tokens'ta kesildi");
+    const text = message.content.filter((b) => b.type === "text").map((b) => (b as { text: string }).text).join("");
+    const parsed = JSON.parse(extractJsonArray(text)) as SuggestedFilter[];
+    if (!Array.isArray(parsed) || parsed.length === 0) throw new Error("boş liste");
+    return parsed;
+  } catch (err) {
+    console.warn("[contractx] filtre önerisi başarısız, jenerik listeye düşülüyor:", err instanceof Error ? err.message : err);
+    return FILTER_FALLBACK;
+  }
 }
