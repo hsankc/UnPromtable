@@ -10,10 +10,24 @@ import styles from "./page.module.css";
 
 type Tab = "all" | "mine";
 
+// Demo gününün başlangıcı: bugün 09:00'dan önceki kayıtlar (geçmiş test
+// verileri) listede görünmesin, sadece bugünkü gerçek aktivite kalsın.
+function todayNineAM(): number {
+  const d = new Date();
+  d.setHours(9, 0, 0, 0);
+  return d.getTime();
+}
+
 export default function KontratlarPage() {
   const w = useWallet();
-  const { entries, error } = useRegistries(15000);
+  const { entries: allEntries, error } = useRegistries(15000);
   const [tab, setTab] = useState<Tab>("all");
+
+  const entries = useMemo(() => {
+    if (!allEntries) return undefined;
+    const cutoff = todayNineAM();
+    return allEntries.filter((e) => e.deployedAt >= cutoff);
+  }, [allEntries]);
 
   const shown = useMemo(() => {
     if (!entries) return undefined;
@@ -26,9 +40,7 @@ export default function KontratlarPage() {
 
   return (
     <>
-      <PageHead title="Kontratlar">
-        Registry v2 ve v1&apos;den okunan her kasa. Sahiplik ve model seçimi zincirden geliyor.
-      </PageHead>
+      <PageHead title="Kontratlar">Her kasa zincirden okunuyor. Sahiplik ve model seçimi kontratın kendisinden geliyor.</PageHead>
 
       <div className={styles.tabs} role="tablist">
         <button type="button" role="tab" aria-selected={tab === "all"} className={`${styles.tab} ${tab === "all" ? styles.tabOn : ""}`} onClick={() => setTab("all")}>
@@ -67,7 +79,6 @@ export default function KontratlarPage() {
                 <tr key={e.vault}>
                   <td>
                     <AddressLink address={e.vault} href={`/app/kontratlar/${e.vault}`} />
-                    {e.version === 1 && <span className={styles.v1}>v1</span>}
                   </td>
                   <td><AddressLink address={e.owner} /></td>
                   <td><ModelChips mask={e.mask} /></td>

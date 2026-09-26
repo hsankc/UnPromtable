@@ -23,6 +23,9 @@ agent/checkpoint_output.json
 
 # services runtime cache (compiled vault artifacts, indexer state)
 services/.cache/
+# Per-request vaults the web app's /compile endpoint generates on demand
+# (regenerated from generate_vault.py + a mask, not hand-written source).
+extracted/guard/src/generated/WebVault*.sol
 
 # misc
 *.log

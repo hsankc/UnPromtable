@@ -8,6 +8,7 @@
     "dev": "concurrently -n relay,api -c magenta,yellow \"npm:relay\" \"npm:api\""
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.128.0",
     "@google/generative-ai": "^0.24.1",
     "@types/node": "^26.6.2",
     "@types/ws": "^8.18.1",

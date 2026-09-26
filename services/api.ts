@@ -76,12 +76,12 @@ route("POST", /^\/contractx\/convert$/, async (req) => {
   if (!paid) throw new HttpError(402, "Ödeme zincirde görülmedi. Önce 0,01 MON'luk dönüşüm ücretini öde.");
 
   const findings = scanPayments(source);
-  const classified = await classifyFindings(findings, source);
+  const { findings: classified, purpose, additionalConcerns } = await classifyFindings(findings, source);
   const patchedSource = patchSource(source, classified);
   const patchedCompile = await compileArbitrary(patchedSource, `post-${sourceLabel(source)}`);
   const suggestedMask = maskOfKeys(classified.filter((f) => f.supported && f.category).map((f) => f.category!));
 
-  return { findings: classified, patchedSource, patchedCompile, suggestedMask };
+  return { findings: classified, purpose, additionalConcerns, patchedSource, patchedCompile, suggestedMask };
 });
 
 function send(res: ServerResponse, code: number, body: unknown) {

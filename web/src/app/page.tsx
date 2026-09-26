@@ -2,6 +2,7 @@ import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { Hero } from "@/components/landing/Hero";
 import { ProblemSection } from "@/components/landing/ProblemSection";
+import { AudienceSection } from "@/components/landing/AudienceSection";
 import { HowSection } from "@/components/landing/HowSection";
 import { ProofSection } from "@/components/landing/ProofSection";
 import { ModelsSection } from "@/components/landing/ModelsSection";
@@ -15,6 +16,7 @@ export default function Home() {
       <main>
         <Hero />
         <ProblemSection />
+        <AudienceSection />
         <HowSection />
         <ProofSection />
         <ModelsSection />

@@ -24,7 +24,7 @@ export interface ClassifiedFinding extends ScanFinding {
   categoryLabel?: string;
   entry?: string;
   rationale: string;
-  source: "gemini" | "mock";
+  source: "claude" | "gemini" | "mock";
 }
 
 export interface CompileCheck {
@@ -41,6 +41,8 @@ export interface PrecheckResult {
 
 export interface ConvertResult {
   findings: ClassifiedFinding[];
+  purpose: string;
+  additionalConcerns: string[];
   patchedSource: string;
   patchedCompile: CompileCheck;
   suggestedMask: number;

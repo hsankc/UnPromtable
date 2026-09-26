@@ -154,6 +154,20 @@ export default function GetirPage() {
 
           {cx.phase === "done" && cx.result && (
             <>
+              <Panel title="Kontratın ne yaptığı">
+                <p className="body muted">{cx.result.purpose}</p>
+                {cx.result.additionalConcerns.length > 0 && (
+                  <div className={styles.concerns}>
+                    <span className="caption subtle">Statik taramanın kaçırmış olabileceği noktalar (yamalanmadı, bilgi amaçlı):</span>
+                    <ul className={styles.concernList}>
+                      {cx.result.additionalConcerns.map((c, i) => (
+                        <li key={i} className="body">{c}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </Panel>
+
               <Panel title="ContractX">
                 <ul className={styles.findingList}>
                   {cx.result.findings.map((f) => (

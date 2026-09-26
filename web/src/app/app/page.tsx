@@ -10,12 +10,22 @@ import { useRegistries } from "@/lib/registry";
 import { formatInt, formatMon, timeAgo } from "@/lib/format";
 import styles from "./page.module.css";
 
+// Demo gününün başlangıcı: bugün 09:00'dan önceki kayıtlar (geçmiş test
+// verileri) görünmesin, sadece bugünkü gerçek aktivite kalsın.
+function todayNineAM(): number {
+  const d = new Date();
+  d.setHours(9, 0, 0, 0);
+  return d.getTime();
+}
+
 export default function AppOverviewPage() {
   const w = useWallet();
   const overview = useApi<Overview>("/index/overview", 6000);
-  const { entries, error: regError } = useRegistries(15000);
+  const { entries: allEntries, error: regError } = useRegistries(15000);
+  const entries = allEntries?.filter((e) => e.deployedAt >= todayNineAM());
 
   const mine = w.address ? entries?.filter((e) => e.owner.toLowerCase() === w.address!.toLowerCase()) : undefined;
+  const createdToday = overview.data?.created.filter((c) => c.ts >= todayNineAM());
 
   return (
     <>
@@ -37,7 +47,7 @@ export default function AppOverviewPage() {
 
       <StatRow
         items={[
-          { label: "Kayıtlı kasa", value: entries === undefined ? "…" : formatInt(entries.length), note: regError ?? "v1 ve v2 registry toplamı" },
+          { label: "Kayıtlı kasa", value: entries === undefined ? "…" : formatInt(entries.length), note: regError ?? "bugün oluşturulan" },
           {
             label: "Hazineye giden ücret",
             value: overview.data ? `${formatMon(BigInt(overview.data.revenue.totalWei), 6)} MON` : "…",
@@ -74,7 +84,6 @@ export default function AppOverviewPage() {
                     <AddressLink address={e.vault} href={`/app/kontratlar/${e.vault}`} />
                     <ModelChips mask={e.mask} />
                     <span className="caption subtle">{timeAgo(e.deployedAt)}</span>
-                    {e.version === 1 && <span className={styles.v1}>v1</span>}
                   </li>
                 ))}
               </ul>
@@ -95,9 +104,9 @@ export default function AppOverviewPage() {
 
       <div className={styles.section}>
         <Panel title="Son oluşturulan kasalar">
-          {overview.data && overview.data.created.length > 0 ? (
+          {createdToday && createdToday.length > 0 ? (
             <ul className={styles.vaultList}>
-              {overview.data.created.map((c) => (
+              {createdToday.map((c) => (
                 <li key={c.vault} className={styles.vaultRow}>
                   <AddressLink address={c.vault} href={`/app/kontratlar/${c.vault}`} />
                   <ModelChips mask={c.mask} />
@@ -107,7 +116,7 @@ export default function AppOverviewPage() {
               ))}
             </ul>
           ) : (
-            <p className="body muted">{overview.data ? "Registry v2'de henüz kasa yok." : "Okunuyor…"}</p>
+            <p className="body muted">{overview.data ? "Bugün henüz kasa oluşturulmadı." : "Okunuyor…"}</p>
           )}
         </Panel>
       </div>

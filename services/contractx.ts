@@ -4,6 +4,7 @@ import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import crypto from "node:crypto";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import Anthropic from "@anthropic-ai/sdk";
 import { CACHE_DIR, FORGE_BIN } from "./lib/env.js";
 
 const execFileAsync = promisify(execFile);
@@ -121,7 +122,17 @@ export interface ClassifiedFinding extends ScanFinding {
   categoryLabel?: string;
   entry?: string;
   rationale: string;
-  source: "gemini" | "mock";
+  source: "claude" | "gemini" | "mock";
+}
+
+export interface ClassifyResult {
+  findings: ClassifiedFinding[];
+  /** One-paragraph, whole-contract read of what it actually does — not just the payment lines. */
+  purpose: string;
+  /** Other value-movement patterns the model noticed that the structural scan didn't capture
+   *  (delegatecall, selfdestruct, arbitrary low-level call, etc.) — informational only, never
+   *  auto-patched, since we can't reliably rewrite what we can't structurally locate. */
+  additionalConcerns: string[];
 }
 
 function mockClassify(f: ScanFinding): { category: CategoryKey; rationale: string } {
@@ -134,52 +145,159 @@ function mockClassify(f: ScanFinding): { category: CategoryKey; rationale: strin
     [/tip|donate|reward|creator/, "social_tip"],
   ];
   const hit = guess.find(([re]) => re.test(s));
-  return { category: hit?.[1] ?? "api_payment", rationale: "[mock] anahtar kelimeye göre tahmin edildi, Gemini yok" };
+  return { category: hit?.[1] ?? "api_payment", rationale: "[mock] anahtar kelimeye göre tahmin edildi, LLM yok" };
 }
 
-/** Classifies every supported finding into one of the six categories via Gemini (falls back to a keyword guess). */
-export async function classifyFindings(findings: ScanFinding[], source: string): Promise<ClassifiedFinding[]> {
-  const supported = findings.filter((f) => f.supported);
-  const apiKey = process.env.GEMINI_API_KEY;
-  const results = new Map<number, { category: CategoryKey; rationale: string; source: "gemini" | "mock" }>();
+interface RawFinding {
+  id: number;
+  category: string;
+  rationale: string;
+}
+interface RawUnderstanding {
+  purpose: string;
+  findings: RawFinding[];
+  additionalConcerns?: string[];
+}
 
-  if (apiKey && supported.length > 0) {
-    try {
-      const genAI = new GoogleGenerativeAI(apiKey);
-      const model = genAI.getGenerativeModel({ model: process.env.GEMINI_MODEL ?? "gemini-2.0-flash" });
-      const prompt = `Bir Solidity kontratındaki MON (native coin) gönderen ifadeleri, aşağıdaki 6 kategoriden birine ata:
-api_payment (API/servis ödemesi), nft_purchase (NFT alımı), defi_swap (DeFi takas), subscription (abonelik), treasury_dao (DAO hazine harcaması), social_tip (sosyal bahşiş).
+function buildPrompt(findings: ScanFinding[], source: string, sourceCap: number): string {
+  const supported = findings.filter((f) => f.supported);
+  return `Bir Solidity kontratını incelemen gerekiyor. Bu kontratın sahibi, içindeki ödeme noktalarını
+"Unpromptable" adlı bir korumaya (kasa kontratına) yönlendirmek istiyor. Görevin iki parça:
+
+1. Kontratın BÜTÜNÜNE bakarak ne iş yaptığını bir paragrafta özetle (fonksiyon isimlerine değil,
+   gerçek davranışına bak: kim çağırıyor, para nereye gidiyor, tekrarlayan mı tek seferlik mi).
+2. Aşağıda statik taramayla bulunmuş, MON (native coin) gönderen ifadeleri şu 6 kategoriden birine ata:
+   api_payment (API/servis ödemesi), nft_purchase (NFT alımı), defi_swap (DeFi takas),
+   subscription (abonelik), treasury_dao (DAO hazine harcaması), social_tip (sosyal bahşiş).
+   Kategoriyi SADECE fonksiyon adına göre değil, kontratın genel amacına göre seç.
+3. Statik taramanın KAÇIRMIŞ OLABİLECEĞİ başka para hareketi noktaları var mı (delegatecall,
+   selfdestruct, düşük seviye arbitrary call, bir yönetici fonksiyonunun tüm bakiyeyi çekmesi vb.)?
+   Varsa düz Türkçe, kısa cümlelerle listele. Yoksa boş dizi döndür. Bunları PATCH ETMİYORUZ,
+   sadece kullanıcıyı uyarıyoruz.
 
 Kontrat kaynağı:
 ---
-${source.slice(0, 6000)}
+${source.slice(0, sourceCap)}
 ---
 
-Bulgular (id, satır, fonksiyon, ifade):
+Statik taramanın bulduğu MON gönderen ifadeler (id, satır, fonksiyon, ifade):
 ${supported.map((f) => `${f.id}: satır ${f.line}, fonksiyon ${f.functionName}(), \`${f.statement}\``).join("\n")}
 
-Sadece bir JSON dizisi döndür, her öğe {"id": <sayı>, "category": "<altı kategoriden biri>", "rationale": "<tek cümle, Türkçe>"}.`;
-      const result = await model.generateContent(prompt);
-      const text = result.response.text();
-      const match = text.match(/\[[\s\S]*\]/);
-      if (!match) throw new Error("Gemini yanıtında JSON dizisi yok");
-      const parsed = JSON.parse(match[0]) as { id: number; category: string; rationale: string }[];
-      for (const p of parsed) {
-        if (BY_KEY.has(p.category as CategoryKey)) {
-          results.set(p.id, { category: p.category as CategoryKey, rationale: p.rationale, source: "gemini" });
-        }
-      }
+Sadece şu şekilde bir JSON nesnesi döndür, başka hiçbir metin yazma:
+{"purpose": "<bir paragraf, Türkçe>", "findings": [{"id": <sayı>, "category": "<altı kategoriden biri>", "rationale": "<tek cümle, Türkçe>"}], "additionalConcerns": ["<varsa, yoksa boş dizi>"]}`;
+}
+
+/**
+ * Extracts the first balanced {...} object from free-form model output (code
+ * fences, a stray trailing sentence, etc. can all follow it) by tracking
+ * brace depth and string state, rather than a greedy first-{-to-last-}
+ * regex, which breaks the moment anything after the JSON contains a brace.
+ */
+function extractJsonObject(text: string): string {
+  const start = text.indexOf("{");
+  if (start < 0) throw new Error("yanıtta JSON nesnesi yok");
+  let depth = 0;
+  let inString = false;
+  let escape = false;
+  for (let i = start; i < text.length; i++) {
+    const c = text[i];
+    if (inString) {
+      if (escape) escape = false;
+      else if (c === "\\") escape = true;
+      else if (c === '"') inString = false;
+      continue;
+    }
+    if (c === '"') inString = true;
+    else if (c === "{") depth++;
+    else if (c === "}") {
+      depth--;
+      if (depth === 0) return text.slice(start, i + 1);
+    }
+  }
+  throw new Error("yanıttaki JSON nesnesi kapanmıyor");
+}
+
+function parseUnderstanding(text: string): RawUnderstanding {
+  return JSON.parse(extractJsonObject(text)) as RawUnderstanding;
+}
+
+async function understandWithClaude(findings: ScanFinding[], source: string): Promise<RawUnderstanding> {
+  const apiKey = process.env.CLAUDE_API_KEY;
+  if (!apiKey) throw new Error("CLAUDE_API_KEY yok");
+  const client = new Anthropic({ apiKey });
+  const message = await client.messages.create({
+    model: process.env.CLAUDE_MODEL ?? "claude-sonnet-5",
+    max_tokens: 4096,
+    messages: [{ role: "user", content: buildPrompt(findings, source, 40_000) }],
+  });
+  if (message.stop_reason === "max_tokens") throw new Error("Claude yanıtı max_tokens'ta kesildi");
+  const text = message.content.filter((b) => b.type === "text").map((b) => (b as { text: string }).text).join("");
+  return parseUnderstanding(text);
+}
+
+async function understandWithGemini(findings: ScanFinding[], source: string): Promise<RawUnderstanding> {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) throw new Error("GEMINI_API_KEY yok");
+  const genAI = new GoogleGenerativeAI(apiKey);
+  const model = genAI.getGenerativeModel({ model: process.env.GEMINI_MODEL ?? "gemini-2.0-flash" });
+  const result = await model.generateContent(buildPrompt(findings, source, 6_000));
+  return parseUnderstanding(result.response.text());
+}
+
+/**
+ * Reads the WHOLE contract (not just the matched lines) to explain what it
+ * does and classify every supported finding, preferring Claude for the
+ * deeper, whole-file reasoning this needs; Gemini is the fallback if Claude
+ * is unavailable or fails, and a keyword guess is the last resort so the
+ * pipeline never just stops.
+ */
+export async function classifyFindings(findings: ScanFinding[], source: string): Promise<ClassifyResult> {
+  const supported = findings.filter((f) => f.supported);
+  let raw: RawUnderstanding | undefined;
+  let usedSource: "claude" | "gemini" | undefined;
+
+  if (supported.length > 0) {
+    try {
+      raw = await understandWithClaude(findings, source);
+      usedSource = "claude";
     } catch (err) {
-      console.warn("[contractx] Gemini sınıflandırma başarısız, mock'a düşülüyor:", err instanceof Error ? err.message : err);
+      console.warn("[contractx] Claude başarısız, Gemini'ye düşülüyor:", err instanceof Error ? err.message : err);
+      try {
+        raw = await understandWithGemini(findings, source);
+        usedSource = "gemini";
+      } catch (err2) {
+        console.warn("[contractx] Gemini de başarısız, mock'a düşülüyor:", err2 instanceof Error ? err2.message : err2);
+      }
     }
   }
 
-  return findings.map((f) => {
-    if (!f.supported) return { ...f, rationale: "ERC20 token transferi — bu sürüm sadece native MON'u koruyor.", source: "mock" as const };
-    const got = results.get(f.id) ?? { ...mockClassify(f), source: "mock" as const };
-    const cat = BY_KEY.get(got.category)!;
-    return { ...f, category: got.category, categoryLabel: cat.label, entry: cat.entry, rationale: got.rationale, source: got.source };
+  const results = new Map<number, { category: CategoryKey; rationale: string }>();
+  if (raw) {
+    for (const p of raw.findings ?? []) {
+      if (BY_KEY.has(p.category as CategoryKey)) results.set(p.id, { category: p.category as CategoryKey, rationale: p.rationale });
+    }
+  }
+
+  const classified = findings.map((f): ClassifiedFinding => {
+    if (!f.supported) return { ...f, rationale: "ERC20 token transferi — bu sürüm sadece native MON'u koruyor.", source: "mock" };
+    const got = results.get(f.id);
+    const category = got?.category ?? mockClassify(f).category;
+    const cat = BY_KEY.get(category)!;
+    return {
+      ...f,
+      category,
+      categoryLabel: cat.label,
+      entry: cat.entry,
+      rationale: got?.rationale ?? mockClassify(f).rationale,
+      source: got ? usedSource! : "mock",
+    };
   });
+
+  return {
+    findings: classified,
+    purpose: raw?.purpose ?? "Kontratın genel amacı çözümlenemedi (LLM'e ulaşılamadı) — sadece statik tarama sonuçları aşağıda.",
+    additionalConcerns: raw?.additionalConcerns ?? [],
+  };
 }
 
 // ---------- patch ----------
