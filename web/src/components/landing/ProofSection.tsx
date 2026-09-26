@@ -5,6 +5,7 @@ import { DecisionList } from "@/components/ui/DecisionList";
 import { useApi, type DecisionEvent, type Overview } from "@/lib/api";
 import { useRegistries } from "@/lib/registry";
 import { useCountUp, useSeen } from "@/lib/motion";
+import { todayNineAM } from "@/lib/format";
 import s from "./section.module.css";
 import styles from "./ProofSection.module.css";
 
@@ -30,9 +31,10 @@ const mon = (wei?: string | bigint) => (wei === undefined ? undefined : Number(f
 
 export function ProofSection() {
   const { ref, seen } = useSeen<HTMLDivElement>(0.3);
-  const overview = useApi<Overview>("/index/overview", 5000);
-  const decisions = useApi<DecisionEvent[]>("/index/decisions?limit=6", 4000);
-  const { entries, error: regError } = useRegistries(15000);
+  const overview = useApi<Overview>(`/index/overview?since=${todayNineAM()}`, 5000);
+  const decisions = useApi<DecisionEvent[]>(`/index/decisions?limit=6&since=${todayNineAM()}`, 4000);
+  const { entries: allEntries, error: regError } = useRegistries(15000);
+  const entries = allEntries?.filter((e) => e.deployedAt >= todayNineAM());
 
   const stopped = overview.data ? BigInt(overview.data.demo.rejectedWei) + BigInt(overview.data.demo.heldWei) : undefined;
   const offline = overview.error && !overview.data;

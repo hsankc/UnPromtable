@@ -23,7 +23,7 @@ export function SiteFooter() {
             <span className="caption subtle">Uygulama</span>
             <Link href="/app/modeller">Modeller</Link>
             <Link href="/app/olustur">Kontrat oluştur</Link>
-            <Link href="/app/getir">Kontratını getir</Link>
+            <Link href="/app/getir">N Protocol</Link>
             <Link href="/app/kontratlar">Kontratlar</Link>
           </div>
           <div className={styles.col}>

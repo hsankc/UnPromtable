@@ -7,20 +7,12 @@ import { DecisionList } from "@/components/ui/DecisionList";
 import { useWallet } from "@/components/wallet/WalletProvider";
 import { useApi, type Overview } from "@/lib/api";
 import { useRegistries } from "@/lib/registry";
-import { formatInt, formatMon, timeAgo } from "@/lib/format";
+import { formatInt, formatMon, timeAgo, todayNineAM } from "@/lib/format";
 import styles from "./page.module.css";
-
-// Demo gününün başlangıcı: bugün 09:00'dan önceki kayıtlar (geçmiş test
-// verileri) görünmesin, sadece bugünkü gerçek aktivite kalsın.
-function todayNineAM(): number {
-  const d = new Date();
-  d.setHours(9, 0, 0, 0);
-  return d.getTime();
-}
 
 export default function AppOverviewPage() {
   const w = useWallet();
-  const overview = useApi<Overview>("/index/overview", 6000);
+  const overview = useApi<Overview>(`/index/overview?since=${todayNineAM()}`, 6000);
   const { entries: allEntries, error: regError } = useRegistries(15000);
   const entries = allEntries?.filter((e) => e.deployedAt >= todayNineAM());
 
@@ -37,7 +29,7 @@ export default function AppOverviewPage() {
               <PlusSquare size={18} strokeWidth={1.8} /> Kontrat oluştur
             </Link>
             <Link href="/app/getir" className="krom-btn krom-btn--ghost">
-              <FileCode2 size={18} strokeWidth={1.8} /> Kontratını getir
+              <FileCode2 size={18} strokeWidth={1.8} /> N Protocol
             </Link>
           </>
         }

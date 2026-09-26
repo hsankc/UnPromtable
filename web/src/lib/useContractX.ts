@@ -34,7 +34,9 @@ export interface CompileCheck {
 }
 
 export interface PrecheckResult {
-  findings: ScanFinding[];
+  findings: ClassifiedFinding[];
+  purpose: string;
+  additionalConcerns: string[];
   compile: CompileCheck;
   sourceHash: Hex;
 }

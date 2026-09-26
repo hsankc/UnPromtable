@@ -389,7 +389,7 @@ const FILTER_FALLBACK: SuggestedFilter[] = [
   { id: "max_tx_pct", name: "Tek işlem tavanı", description: "Bir işlemde kasanın en fazla şu yüzdesi çıkabilir.", recommended: true, hasValue: true, valueLabel: "Yüzde (%)", suggestedValue: "20", feeMon: 6 },
   { id: "daily_unknown_pct", name: "Tanınmayana günlük bütçe", description: "Tanınmayan adreslere günde en fazla şu yüzde gidebilir.", recommended: true, hasValue: true, valueLabel: "Yüzde (%)", suggestedValue: "1", feeMon: 6 },
   { id: "min_amount", name: "Minimum tutar", description: "Bu tutarın altındaki işlemler otomatik reddedilir (toz/spam koruması).", recommended: false, hasValue: true, valueLabel: "MON", suggestedValue: "0.0001", feeMon: 5 },
-  { id: "allowlist_only", name: "Sadece onaylı adresler", description: "Owner'ın önceden onaylamadığı adreslere hiç ödeme yapılmaz.", recommended: false, hasValue: false, feeMon: 12 },
+  { id: "allowlist_only", name: "Sadece onaylı adresler", description: "Owner'ın önceden onaylamadığı adreslere hiç ödeme yapılmaz.", recommended: false, hasValue: true, valueLabel: "Onaylı adresler (virgülle ayır)", suggestedValue: "", feeMon: 12 },
   { id: "delay_all", name: "Her ödemeyi bekletme", description: "Tutar ne olursa olsun her ödeme owner onayı için bekletilir.", recommended: false, hasValue: true, valueLabel: "Bekleme (dakika)", suggestedValue: "10", feeMon: 9 },
 ];
 
@@ -402,9 +402,11 @@ tavanı"nı düşük öner; sık küçük ödeme yapıyorsa "minimum tutar" öne
 varsa "sadece onaylı adresler" özellikle mantıklı olabilir).
 
 Her filtre için: KISA isim (2-4 kelime), TEK KISA cümle açıklama (en fazla 15 kelime), varsayılan olarak
-önerilir mi (recommended), sayısal bir değer gerektirir mi (hasValue) ve gerekiyorsa KONTRATIN
+önerilir mi (recommended), bir değer/girdi gerektirir mi (hasValue) ve gerekiyorsa KONTRATIN
 İÇERİĞİNE göre makul bir varsayılan değer (suggestedValue), ve zorluğuna göre bir MON ücreti (feeMon —
 basit açık/kapalı 5-8, eşik/sayısal 8-14, davranışsal/karmaşık 14-20 aralığında, gerçekçi ondalık, örn. 7.5).
+Filtre bir adres listesi gerektiriyorsa (örn. "sadece onaylı adresler", allowlist) hasValue=true ve
+valueLabel="Onaylı adresler (virgülle ayır)" yap, suggestedValue boş string olsun.
 
 Kontrat kaynağı:
 ---

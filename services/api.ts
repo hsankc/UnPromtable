@@ -44,9 +44,9 @@ export class HttpError extends Error {
 }
 
 route("GET", /^\/index\/status$/, () => status());
-route("GET", /^\/index\/overview$/, () => overview());
-route("GET", /^\/index\/revenue$/, () => revenueView(50));
-route("GET", /^\/index\/decisions$/, (_req, url) => recentDecisions(Math.min(100, Number(url.searchParams.get("limit") ?? 20))));
+route("GET", /^\/index\/overview$/, (_req, url) => overview(Number(url.searchParams.get("since") ?? 0)));
+route("GET", /^\/index\/revenue$/, (_req, url) => revenueView(50, Number(url.searchParams.get("since") ?? 0)));
+route("GET", /^\/index\/decisions$/, (_req, url) => recentDecisions(Math.min(100, Number(url.searchParams.get("limit") ?? 20)), Number(url.searchParams.get("since") ?? 0)));
 route("GET", /^\/index\/vault\/(0x[0-9a-fA-F]{40})$/, (_req, url) => vaultView(url.pathname.split("/").pop()!));
 
 route("POST", /^\/compile$/, async (req) => {
@@ -64,8 +64,20 @@ route("POST", /^\/contractx\/precheck$/, async (req) => {
   if (!source || typeof source !== "string") throw new HttpError(400, "Kaynak kodu eksik.");
   if (source.length > 60_000) throw new HttpError(413, "Kaynak kodu çok büyük (60.000 karakter sınırı).");
   const findings = scanPayments(source);
-  const compile = await compileArbitrary(source, `pre-${sourceLabel(source)}`);
-  return { findings, compile, sourceHash: keccak256(stringToHex(source)) };
+  const [compile, understanding] = await Promise.all([
+    compileArbitrary(source, `pre-${sourceLabel(source)}`),
+    // Ücretsiz: kontratın ne yaptığını ve ödeme noktalarının olası kategorisini
+    // ödeme istenmeden önce göstermek için. Kategorizasyon burada bilgi
+    // amaçlı — asıl (ücretli) dönüşümde yeniden ve bağımsız hesaplanır.
+    classifyFindings(findings, source),
+  ]);
+  return {
+    findings: understanding.findings,
+    purpose: understanding.purpose,
+    additionalConcerns: understanding.additionalConcerns,
+    compile,
+    sourceHash: keccak256(stringToHex(source)),
+  };
 });
 
 route("POST", /^\/contractx\/convert$/, async (req) => {

@@ -252,8 +252,9 @@ export function vaultView(address: string, limit = 100) {
   };
 }
 
-export function revenueView(limit = 20) {
-  const by = (k: FeeEvent["kind"]) => sum(state.fees.filter((f) => f.kind === k));
+export function revenueView(limit = 20, sinceTs = 0) {
+  const fees = sinceTs > 0 ? state.fees.filter((f) => f.ts >= sinceTs) : state.fees;
+  const by = (k: FeeEvent["kind"]) => sum(fees.filter((f) => f.kind === k));
   const creation = by("creation");
   const conversion = by("conversion");
   const protocol = by("protocol");
@@ -263,21 +264,23 @@ export function revenueView(limit = 20) {
     conversionWei: conversion.toString(),
     protocolWei: protocol.toString(),
     totalWei: (creation + conversion + protocol).toString(),
-    count: state.fees.length,
-    recent: [...state.fees].sort(byNewest).slice(0, limit),
+    count: fees.length,
+    recent: [...fees].sort(byNewest).slice(0, limit),
   };
 }
 
-export function overview() {
+export function overview(sinceTs = 0) {
+  const created = sinceTs > 0 ? state.created.filter((c) => c.ts >= sinceTs) : state.created;
   return {
     status: status(),
     demo: { address: DEMO_VAULT, ...vaultView(DEMO_VAULT, 12) },
-    revenue: revenueView(10),
-    created: [...state.created].sort(byNewest).slice(0, 10),
-    createdCount: state.created.length,
+    revenue: revenueView(10, sinceTs),
+    created: [...created].sort(byNewest).slice(0, 10),
+    createdCount: created.length,
   };
 }
 
-export function recentDecisions(limit = 20) {
-  return [...state.decisions].sort(byNewest).slice(0, limit);
+export function recentDecisions(limit = 20, sinceTs = 0) {
+  const decisions = sinceTs > 0 ? state.decisions.filter((d) => d.ts >= sinceTs) : state.decisions;
+  return [...decisions].sort(byNewest).slice(0, limit);
 }

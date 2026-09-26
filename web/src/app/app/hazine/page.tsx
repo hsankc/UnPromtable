@@ -4,7 +4,7 @@ import { PageHead, Panel, StatRow, AddressLink, TxLink } from "@/components/app/
 import { useWallet } from "@/components/wallet/WalletProvider";
 import { useApi, type RevenueView, type FeeEvent } from "@/lib/api";
 import { TREASURY } from "@/lib/deployments";
-import { formatMon, shortAddr, timeAgo } from "@/lib/format";
+import { formatMon, shortAddr, timeAgo, todayNineAM } from "@/lib/format";
 import styles from "./page.module.css";
 
 const KIND_LABEL: Record<FeeEvent["kind"], string> = {
@@ -15,13 +15,14 @@ const KIND_LABEL: Record<FeeEvent["kind"], string> = {
 
 export default function HazinePage() {
   const w = useWallet();
-  const revenue = useApi<RevenueView>("/index/revenue", 8000);
+  const revenue = useApi<RevenueView>(`/index/revenue?since=${todayNineAM()}`, 8000);
   const isTreasuryOwner = !!w.address && w.address.toLowerCase() === TREASURY.toLowerCase();
 
   return (
     <>
       <PageHead title="Hazine">
-        Platformun aldığı her ücret zincirden okunuyor. Kimse elle toplamaz; her ödeme aynı işlemde bu adrese gider.
+        Platformun bugün aldığı her ücret zincirden okunuyor. Kimse elle toplamaz; her ödeme aynı işlemde bu adrese
+        gider.
       </PageHead>
 
       <Panel>

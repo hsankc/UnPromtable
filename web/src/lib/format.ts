@@ -22,6 +22,17 @@ export function formatInt(n: number | bigint): string {
   return Number(n).toLocaleString("tr-TR");
 }
 
+/**
+ * Demo gününün başlangıcı: bugün 09:00'dan önceki kayıtlar (geçmiş test
+ * verileri) hiçbir listede/toplamda görünmesin, sadece bugünkü gerçek
+ * aktivite kalsın.
+ */
+export function todayNineAM(): number {
+  const d = new Date();
+  d.setHours(9, 0, 0, 0);
+  return d.getTime();
+}
+
 export function timeAgo(ms: number, now = Date.now()): string {
   const s = Math.max(0, Math.round((now - ms) / 1000));
   if (s < 60) return `${s} sn önce`;

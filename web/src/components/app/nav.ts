@@ -10,7 +10,7 @@ export const APP_NAV: NavItem[] = [
   { href: "/app", label: "Genel bakış", icon: LayoutGrid },
   { href: "/app/modeller", label: "Modeller", icon: Brain },
   { href: "/app/olustur", label: "Kontrat oluştur", icon: PlusSquare },
-  { href: "/app/getir", label: "Kontratını getir", icon: FileCode2 },
+  { href: "/app/getir", label: "N Protocol", icon: FileCode2 },
   { href: "/app/kontratlar", label: "Kontratlar", icon: Boxes },
   { href: "/app/saldiri", label: "Saldırı dene", icon: ShieldAlert },
   { href: "/app/hazine", label: "Hazine", icon: Landmark },

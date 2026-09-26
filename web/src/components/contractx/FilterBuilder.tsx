@@ -54,7 +54,7 @@ export function FilterBuilder({ source, onContinue }: { source: string; onContin
         </div>
       )}
 
-      {cx.filtersLoading && <Notice>Claude kontratını ve açıklamanı okuyup filtre öneriyor…</Notice>}
+      {cx.filtersLoading && <Notice>N Protocol kontratını ve açıklamanı okuyup filtre öneriyor…</Notice>}
       {cx.filtersError && <Notice tone="danger">{cx.filtersError}</Notice>}
 
       {cx.filters && (
@@ -97,7 +97,7 @@ export function FilterBuilder({ source, onContinue }: { source: string; onContin
             <span className="title num">{total.toFixed(3)} MON</span>
           </div>
           <p className="caption subtle">
-            Bu liste Claude&apos;un gerçek önerisi. Şu an gerçekten zincirde uygulanan tek limitler, kasa
+            Bu liste N Protocol&apos;ün gerçek önerisi. Şu an gerçekten zincirde uygulanan tek limitler, kasa
             oluştururken seçtiğin tek-işlem tavanı ve günlük bütçe — buradaki diğer filtreler yol haritası,
             henüz kasaya gömülmüyor.
           </p>
