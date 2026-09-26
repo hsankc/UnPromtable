@@ -1,10 +1,14 @@
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="web/public/brand/up-lockup-dark.svg">
+    <img src="web/public/brand/up-lockup-light.svg" alt="Unpromptable" width="420">
+  </picture>
+</p>
+<p align="center"><i>Talk it into anything. It still won't pay.</i></p>
+
 # Unpromptable
 
-**Talk it into anything. It still won't pay.**
-
 Monad İstanbul V2 için geliştirildi. AI ajanlarının kendi başına ödeme yaptığı bir dünyada, ajanın ikna edilmesiyle paranın gitmesini engelleyen bir harcama katmanı: ajan hiçbir zaman özel anahtar tutmaz, sadece bir ödeme **önerebilir**; öneriyi onaylayıp onaylamayacağına, zincirde, eğitilmiş küçük bir model ve değiştirilemez matematiksel sınırlar karar verir.
-
-![Ana sayfa](docs/screenshots/01-landing.png)
 
 ---
 
@@ -192,6 +196,34 @@ Proje boyunca ilke: **gerçek olmayan hiçbir şeyi gerçekmiş gibi göstermeme
 | Hazine | `0x3D254CE41d2462A1292aAD726A39E6845fcDe452` |
 
 Explorer: https://testnet.monadexplorer.com · Faucet: https://faucet.monad.xyz/
+
+---
+
+## Jürinin sorabileceği sorular
+
+**Bu gerçekten zincirde mi çalışıyor, yoksa demo/mock mu?**
+Yukarıdaki "Ne gerçek, ne değil" bölümünde tek tek listelendi: modeller deploy edilmiş kontratlarda çalışıyor, kasa oluşturma gerçek MON harcıyor, N Protocol dönüşümü gerçek bir ödeme ve gerçek bir LLM çağrısı gerektiriyor. Simülasyon ya da sahte veri yok.
+
+**Model yanlış karar verirse (kandırılırsa) ne olur?**
+Hiçbir şey — model onaylasa bile iki sert limit (tek işlemde kasanın en fazla %20'si, tanınmayan adrese günde en fazla %1'i) modelin kararından bağımsız her zaman uygulanıyor. Tek hata noktası model değil, çünkü model tek karar verici değil.
+
+**Bunun MetaMask'ın Agent Wallet'ından ya da Alchemy'nin agent cüzdanlarından farkı ne?**
+Onlar da gerçek ürünler ve benzer bir problemi çözüyorlar, ama farklı bir yerden: ajana yine de imza atabilen bir anahtar veriyorlar (ERC-7715/7710 ile kapsamı daraltılmış bir "session key" — sabit bir harcama tavanı ve izinli protokol listesiyle sınırlı). O anahtar sızarsa ya da limit gevşek ayarlanmışsa, sınır içindeki her işlem başka bir kontrolden geçmeden yürür. Bizde ajanın imza yetkisi **hiç yok** — sadece kasaya bir öneri bırakabiliyor, kararı her zaman kasadaki öğrenilmiş model + değiştirilemez limitler veriyor. Rakip değil, farklı bir katman: teoride onların ajanı bile bizim kasamıza öneri gönderebilir.
+
+**Eğitim verisi sentetik — bu bir sorun değil mi?**
+Sentetik ama kategoriye özgü, gerçekçi dağılımlarla üretildi (normal / gri bölge / saldırı, kategori başına 12.500 örnek). Amaç belirli faturaları ezberlemek değil, davranışsal bir örüntüyü öğrenmek — bu yüzden modele ham veri değil, geçmişe dayalı oranlar ve sinyaller veriliyor (8 özellik). Doğruluk sayıları gerçek test setinden, bu oturumda eğitim yeniden çalıştırılıp doğrulandı.
+
+**İtibar puanı gerçek bir kaynaktan mı geliyor?**
+Hayır, bugün basit bir demo kontratından (`MockReputation`) geliyor ve sahibi tarafından elle güncelleniyor. Gerçek bir ERC-8004 kayıt defterine bağlanmak net bir entegrasyon noktası — bu hackathonda çözülen kısım değil, dürüstçe böyle söylüyoruz.
+
+**Mainnet'e ya da başka bir zincire taşınabilir mi?**
+Kontratlar standart, EVM uyumlu Solidity — mantık olarak herhangi bir EVM zincirine taşınabilir. Ama altı modelin tamamını tek kasada barındırma tasarımı 38 KB tutuyor, Ethereum mainnet'in 24 KB sınırını aşıyor. Bugünkü haliyle bu "hepsi bir arada" kasa sadece Monad gibi yüksek bytecode limitli zincirlerde mümkün; Ethereum'a taşımak modelleri ayrı kontratlara bölmeyi gerektirir.
+
+**Neden hem Gemini hem Claude kullanılıyor?**
+İki farklı iş için: ajanın kendisi (Saldırı Dene demosundaki karar adımı) Gemini ile çalışıyor. N Protocol'ün kontrat-okuma ve filtre-önerisi adımı ayrı bir problem — daha uzun bağlam ve daha titiz kod analizi gerektirdiği için Claude kullanıldı.
+
+**Kaynak kodu açık mı?**
+Evet, bu repo tamamen açık — kontratlar, eğitim kodu, önyüz ve backend'in tamamı burada.
 
 ---
 
