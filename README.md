@@ -18,7 +18,22 @@ Otonom ödeme yapan AI ajanları (API'lere mikro ödeme, NFT alımı, DEX'te tak
 
 ## Çözüm
 
-Ajan **hiçbir zaman** özel anahtar tutmaz. Yapabildiği tek şey, bir kasa (vault) kontratına `propose(alıcı, tutar)` çağrısı yapmak — bu çağrı tek başına hiçbir şey ödemez. Kasanın içinde, o ödeme türü için eğitilmiş küçük bir sinir ağı çalışır ve öneriyi onaylar, geciktirir ya da reddeder. Modelin kararı ne olursa olsun, iki sert matematiksel sınır her zaman geçerlidir ve hiçbir model çıktısıyla aşılamaz:
+Ajan **hiçbir zaman** özel anahtar tutmaz. Yapabildiği tek şey, bir kasa (vault) kontratına `propose(alıcı, tutar)` çağrısı yapmak — bu çağrı tek başına hiçbir şey ödemez.
+
+Kasanın içinde, o ödeme türü için eğitilmiş bir sinir ağı öneriyi tek bir eşik değere göre değil, **8 davranışsal sinyalin birlikte değerlendirilmesiyle** karara bağlar:
+
+1. **Tutar / kasa bakiyesi oranı** — istenen tutar kasanın ne kadarını oluşturuyor
+2. **Alıcı daha önce ödeme aldı mı** — bu adres kasa için yeni mi, tanıdık mı
+3. **Alıcıya önceki ödeme sayısı** — tek seferlik mi, düzenli bir ilişki mi
+4. **Son 1 saatteki toplam çıkış oranı** — art arda küçük ödemelerle sessizce boşaltma girişimini yakalamak için
+5. **Son ödemeden bu yana geçen süre** — anormal sıklıkta tekrar eden istekleri fark etmek için
+6. **Alıcının itibar puanı** — zincirdeki itibar kaydından
+7. **Tutar / bu kasanın geçmiş ortalama ödemesi oranı** — bu kasa için "normal" tutarın ne kadar dışında
+8. **Alıcı bir kontrat mı** — kişiye mi, bir protokole mi gidiyor
+
+Bu sekiz sinyalin kombinasyonuna göre model üç karardan birini veriyor: **onay, beklet ya da red**. Yani "tutar şu sayıyı geçti mi" gibi tek boyutlu bir kural değil — alıcının geçmişi, ödeme sıklığı ve bu kasanın kendi harcama örüntüsüyle ne kadar tutarlı olduğu birlikte tartılıyor.
+
+Model ne karar verirse versin, üstüne **modelin kararından tamamen bağımsız, kontratta sabit kod olarak yazılı** iki matematiksel sınır daha biniyor ve bunlar hiçbir model çıktısıyla aşılamaz — model tamamen yanılsa bile:
 
 - **Tek işlemde kasanın en fazla %20'si** çıkabilir.
 - **Tanınmayan bir adrese günde en fazla %1'i** gidebilir.
@@ -28,12 +43,14 @@ Ajan **hiçbir zaman** özel anahtar tutmaz. Yapabildiği tek şey, bir kasa (va
    ──────────────────                   ─────────────────────────
    Faturayı/isteği okur      propose()  ┌─────────────────────────┐
    Bir tutar ve alıcı  ───────────────► │ features(alıcı, tutar)  │
-   önerir (LLM karar verir)             │  → 8 davranışsal özellik│
+   önerir (LLM karar verir)             │  → 8 davranışsal sinyal │
+                                         │    (geçmiş, itibar,     │
+                                         │    sıklık, oran, ...)   │
                                          │                         │
-                                         │ eğitilmiş model         │
+                                         │ eğitilmiş sinir ağı     │
                                          │  → onay / beklet / red  │
                                          │                         │
-                                         │ sert limitler           │
+                                         │ değiştirilemez limitler │
                                          │  → %20 tek işlem tavanı │
                                          │  → %1 günlük bütçe      │
                                          └───────────┬─────────────┘
