@@ -1,0 +1,8 @@
+.tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: var(--font-sans); font-size: 14px; font-weight: 600; line-height: 1;
+  white-space: nowrap;
+}
+.ok { color: var(--ok); }
+.warn { color: var(--warn); }
+.danger { color: var(--danger); }

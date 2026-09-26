@@ -1,0 +1,5 @@
+.closing { padding-block: calc(var(--space-24) * 1.5); background: var(--page); color: var(--ink); border-top: 0; }
+.inner { display: flex; flex-direction: column; align-items: center; gap: var(--space-6); text-align: center; }
+.inner h2 { max-width: 14ch; }
+.lede { max-width: 52ch; color: var(--ink-muted); }
+.actions { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-3); margin-top: var(--space-4); }

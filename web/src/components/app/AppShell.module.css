@@ -1,0 +1,58 @@
+.shell { display: grid; grid-template-columns: var(--sidebar-w) minmax(0, 1fr); min-height: 100svh; }
+
+.sidebar {
+  position: sticky; top: 0; height: 100svh;
+  display: flex; flex-direction: column; gap: var(--space-8);
+  padding: var(--space-6) var(--space-4);
+  border-right: 1px solid var(--line);
+  background: var(--page);
+}
+.brand { display: inline-flex; padding: var(--space-2) var(--space-3); color: var(--ink); border-radius: var(--radius-sm); }
+
+.nav { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+.navFoot { margin-top: auto; padding-top: var(--space-4); border-top: 1px solid var(--line); }
+.link {
+  display: flex; align-items: center; gap: var(--space-3);
+  padding: 10px var(--space-3);
+  border-radius: var(--radius-sm);
+  color: var(--ink-muted); text-decoration: none;
+  font-size: 15px; font-weight: 500;
+}
+.link:hover { color: var(--ink); background: var(--raised); }
+.linkOn { color: var(--ink); background: var(--raised); box-shadow: inset 0 0 0 1px var(--line); }
+
+.sideFoot { display: flex; align-items: center; gap: var(--space-3); padding: 0 var(--space-2); }
+
+.main { min-width: 0; display: flex; flex-direction: column; }
+.topbar {
+  position: sticky; top: 0; z-index: 40;
+  height: var(--header-h);
+  display: flex; align-items: center; gap: var(--space-4);
+  padding: 0 var(--space-8);
+  background: var(--page);
+  border-bottom: 1px solid var(--line);
+}
+.pageTitle { color: var(--ink); }
+.topActions { margin-left: auto; display: flex; align-items: center; gap: var(--space-3); }
+.menuBtn, .mobileBrand { display: none; }
+
+.content { padding: var(--space-12) var(--space-8) var(--space-24); width: 100%; max-width: 1280px; }
+
+.sheet {
+  position: fixed; inset: 0; z-index: 70;
+  display: flex; flex-direction: column; gap: var(--space-6);
+  padding: var(--space-4) var(--gutter) var(--space-8);
+  background: var(--page);
+  overflow-y: auto;
+}
+.sheetHead { display: flex; align-items: center; justify-content: space-between; height: 56px; color: var(--ink); }
+.sheetFoot { display: flex; }
+
+@media (max-width: 960px) {
+  .shell { grid-template-columns: minmax(0, 1fr); }
+  .sidebar { display: none; }
+  .menuBtn, .mobileBrand { display: inline-flex; }
+  .topbar { padding: 0 var(--gutter); gap: var(--space-3); }
+  .pageTitle { display: none; }
+  .content { padding: var(--space-8) var(--gutter) var(--space-16); }
+}

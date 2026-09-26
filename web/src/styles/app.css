@@ -1,0 +1,54 @@
+/* next/font self-hosts the Krom faces under hashed family names, so the
+   font tokens point at the variables next/font sets on <html>. html:root
+   outranks krom.css's :root without editing it. */
+html:root {
+  --font-display: var(--nf-display), system-ui, sans-serif;
+  --font-sans: var(--nf-sans), system-ui, sans-serif;
+  --font-mono: var(--nf-mono), ui-monospace, monospace;
+  --font-lockup: var(--nf-lockup), ui-sans-serif, system-ui, sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; scroll-padding-top: calc(var(--header-h) + var(--space-4)); }
+body {
+  margin: 0;
+  background: var(--page);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3, h4, p { margin: 0; }
+a { color: var(--accent); }
+img, svg { display: block; }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+.container {
+  width: 100%;
+  max-width: calc(var(--container) + 2 * var(--gutter));
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+.muted { color: var(--ink-muted); }
+.subtle { color: var(--ink-subtle); }
+.num { font-variant-numeric: tabular-nums; }
+
+.visually-hidden {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+/* Icon-only square button used in headers and toolbars. */
+.icon-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 40px; height: 40px; padding: 0;
+  border: 1px solid var(--line); border-radius: var(--radius-pill);
+  background: transparent; color: var(--ink); cursor: pointer;
+}
+.icon-btn:hover { background: var(--raised); }

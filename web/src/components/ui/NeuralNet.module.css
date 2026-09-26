@@ -1,0 +1,22 @@
+.net { width: 100%; height: auto; overflow: visible; }
+
+.pos { stroke: var(--ink); }
+.neg { stroke: var(--ink-subtle); stroke-dasharray: 3 3; }
+
+.node { fill: var(--raised); stroke: var(--line-strong); stroke-width: 1.5; }
+.nodeOn { fill: var(--ink); stroke: var(--ink); stroke-width: 1.5; }
+
+.out0 { fill: var(--ok); stroke: var(--ok); }
+.out1 { fill: var(--warn); stroke: var(--warn); }
+.out2 { fill: var(--danger); stroke: var(--danger); }
+
+.inLabel { fill: var(--ink-subtle); font-family: var(--font-mono); font-size: 12px; }
+.outLabel { fill: var(--ink-subtle); font-family: var(--font-sans); font-size: 15px; font-weight: 500; }
+.outLabelOn { fill: var(--ink); font-family: var(--font-display); font-size: 16px; font-weight: 500; }
+
+.pulse { fill: var(--ink); }
+.pulseIn { fill: var(--ink-subtle); }
+
+@media (prefers-reduced-motion: reduce) {
+  .pulses { display: none; }
+}

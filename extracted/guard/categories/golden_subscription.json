@@ -1,0 +1,61 @@
+{
+  "vectors": {
+    "regular_biller": [
+      10,
+      1,
+      20,
+      60,
+      2592,
+      90,
+      100,
+      0
+    ],
+    "compromised_biller_spike": [
+      5000,
+      1,
+      12,
+      5000,
+      300,
+      85,
+      3000,
+      0
+    ],
+    "subscription_bombing": [
+      120,
+      0,
+      0,
+      3500,
+      5,
+      10,
+      400,
+      1
+    ],
+    "new_biller_small": [
+      15,
+      0,
+      0,
+      30,
+      1800,
+      65,
+      110,
+      1
+    ],
+    "moderate_new_biller": [
+      300,
+      0,
+      0,
+      450,
+      900,
+      40,
+      250,
+      1
+    ]
+  },
+  "expect": {
+    "regular_biller": 0,
+    "compromised_biller_spike": 2,
+    "subscription_bombing": 2,
+    "new_biller_small": 1,
+    "moderate_new_biller": 1
+  }
+}

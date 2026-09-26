@@ -1,0 +1,86 @@
+.card {
+  display: flex; flex-direction: column; gap: var(--space-6);
+  padding: var(--space-8);
+  background: var(--raised);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+}
+
+.row { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--space-2) var(--space-4); }
+.label { display: inline-flex; align-items: center; gap: var(--space-2); color: var(--ink-muted); }
+
+.note {
+  min-height: 7.5em;
+  margin: 0;
+  padding: var(--space-6);
+  background: var(--sunken);
+  border-radius: var(--radius-md);
+  color: var(--ink);
+  font-size: 14px; line-height: 1.6;
+}
+.caret {
+  display: inline-block; width: .55em; height: 1.1em; margin-left: 2px; vertical-align: -.2em;
+  background: var(--ink);
+  animation: blink .9s steps(1) infinite;
+}
+@keyframes blink { 50% { opacity: 0; } }
+
+.proposal {
+  display: flex; flex-direction: column; gap: var(--space-2);
+  opacity: 0; transform: translateY(8px);
+  transition: opacity 400ms var(--ease-brand), transform 400ms var(--ease-brand);
+}
+.proposal.in { opacity: 1; transform: none; }
+.amountLine { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-2) var(--space-4); }
+
+.amount { position: relative; }
+/* The strike draws across once the verdict lands. */
+.amount::after {
+  content: ""; position: absolute; left: -4px; right: -4px; top: 55%;
+  height: 3px; background: var(--danger);
+  transform: scaleX(0); transform-origin: left;
+  transition: transform 500ms var(--ease-brand) 250ms;
+}
+.struck::after { transform: scaleX(1); }
+
+.verdictRow { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); min-height: 52px; }
+
+.stamp {
+  display: inline-flex; align-items: center; gap: var(--space-2);
+  padding: var(--space-3) var(--space-6);
+  border: 2px solid var(--danger); border-radius: var(--radius-pill);
+  color: var(--danger);
+  font-family: var(--font-display); font-size: 18px; font-weight: 500; letter-spacing: -.2px;
+  opacity: 0; transform: scale(1.35) rotate(-4deg);
+}
+.stampIn { animation: stamp 420ms var(--ease-brand) forwards; }
+@keyframes stamp {
+  0% { opacity: 0; transform: scale(1.35) rotate(-4deg); }
+  70% { opacity: 1; transform: scale(.97) rotate(-2deg); }
+  100% { opacity: 1; transform: scale(1) rotate(-2deg); }
+}
+
+.replay {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: var(--space-2) var(--space-3);
+  border: 0; border-radius: var(--radius-pill);
+  background: transparent; color: var(--ink-muted); cursor: pointer;
+}
+.replay:hover { color: var(--ink); background: var(--page); }
+
+.tx {
+  display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3);
+  align-self: flex-start;
+  color: var(--accent);
+}
+
+@media (max-width: 720px) {
+  .card { padding: var(--space-6); }
+  .note { padding: var(--space-4); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .proposal, .amount::after { transition: none; }
+  .stampIn { animation: none; opacity: 1; transform: rotate(-2deg); }
+  .caret { animation: none; }
+}

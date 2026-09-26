@@ -1,0 +1,31 @@
+.fees { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+.fee {
+  display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: var(--space-6);
+  padding: var(--space-6) 0;
+  border-bottom: 1px solid var(--line);
+}
+.price { display: flex; flex-direction: column; gap: 2px; white-space: nowrap; }
+.feeText { display: flex; flex-direction: column; gap: var(--space-2); }
+
+.flow {
+  margin: 0;
+  display: flex; flex-direction: column; align-items: center; gap: var(--space-4);
+  padding: var(--space-8);
+  background: var(--raised);
+  border: 1px solid var(--line); border-radius: var(--radius-lg);
+}
+.svg { width: 100%; height: auto; }
+.path { fill: none; stroke: var(--line-strong); stroke-width: 1.5; }
+.src { fill: var(--page); stroke: var(--line-strong); }
+.srcLabel { fill: var(--ink); font-family: var(--font-sans); font-size: 14px; font-weight: 500; }
+.coin { fill: var(--ink); }
+.treasury { fill: var(--ink); }
+.treasuryLabel { fill: var(--page); font-family: var(--font-display); font-size: 15px; font-weight: 500; }
+
+.caption { display: flex; flex-direction: column; align-items: center; gap: var(--space-1); text-align: center; }
+.addr { display: inline-flex; align-items: center; gap: 6px; color: var(--accent); }
+
+@media (max-width: 720px) {
+  .fee { grid-template-columns: minmax(0, 1fr); gap: var(--space-2); }
+  .flow { padding: var(--space-4); }
+}

@@ -1,0 +1,61 @@
+{
+  "vectors": {
+    "known_contributor_grant": [
+      80,
+      1,
+      4,
+      200,
+      1800,
+      90,
+      100,
+      1
+    ],
+    "flash_quorum_drain": [
+      9000,
+      0,
+      0,
+      9000,
+      30,
+      5,
+      4500,
+      0
+    ],
+    "salami_grants": [
+      500,
+      0,
+      0,
+      5000,
+      10,
+      30,
+      600,
+      1
+    ],
+    "new_contributor_small": [
+      50,
+      0,
+      0,
+      90,
+      2400,
+      60,
+      110,
+      0
+    ],
+    "moderate_new_grant": [
+      1000,
+      0,
+      0,
+      1400,
+      1200,
+      40,
+      350,
+      1
+    ]
+  },
+  "expect": {
+    "known_contributor_grant": 0,
+    "flash_quorum_drain": 2,
+    "salami_grants": 2,
+    "new_contributor_small": 0,
+    "moderate_new_grant": 1
+  }
+}

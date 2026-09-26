@@ -1,0 +1,5 @@
+.stage {
+  min-height: 100svh;
+  background: var(--page);
+  color: var(--ink);
+}

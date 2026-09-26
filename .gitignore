@@ -1,0 +1,29 @@
+# dependencies
+node_modules/
+
+# secrets — never commit these
+agent/.env
+**/.env
+**/.env.*
+!**/.env.example
+
+# Next.js
+web/.next/
+web/next-env.d.ts
+web/*.tsbuildinfo
+
+# Foundry build artifacts (regenerate with `forge build`)
+extracted/guard/out/
+extracted/guard/cache/
+extracted/guard/__pycache__/
+# Foundry's own run history — every deploy invocation, filename-stamped;
+# not read by anything, and it's the wrong place to keep a project timeline.
+extracted/guard/broadcast/
+agent/checkpoint_output.json
+
+# services runtime cache (compiled vault artifacts, indexer state)
+services/.cache/
+
+# misc
+*.log
+.DS_Store

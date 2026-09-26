@@ -1,0 +1,72 @@
+/* One 6 s cycle: badge 1 lights, the signal runs connector 1 (30→50%),
+   badge 2 lights, the signal runs connector 2 (50→72%), badge 3 lights. */
+.steps {
+  list-style: none; margin: 0; padding: 0;
+  display: flex; flex-direction: column; gap: var(--space-8);
+  --cycle: 6s;
+}
+
+.step { position: relative; display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: var(--space-6); align-items: start; }
+.text { display: flex; flex-direction: column; gap: var(--space-2); padding-top: var(--space-2); }
+
+/* Line from this badge down to the next one. */
+.connector {
+  position: absolute; left: 21px; top: 44px; bottom: calc(-1 * var(--space-8)); width: 2px;
+  background: var(--line);
+}
+.signal {
+  position: absolute; left: 50%; top: 0;
+  width: 12px; height: 12px; margin-left: -6px; margin-top: -6px;
+  border-radius: 50%;
+  background: var(--ink);
+  box-shadow: 0 0 0 4px var(--page);
+  opacity: 0;
+}
+.s0 .signal { animation: run0 var(--cycle) var(--ease-brand) infinite; }
+.s1 .signal { animation: run1 var(--cycle) var(--ease-brand) infinite; }
+@keyframes run0 {
+  0%, 29% { top: 0; opacity: 0; }
+  30% { top: 0; opacity: 1; }
+  49% { top: 100%; opacity: 1; }
+  50%, 100% { top: 100%; opacity: 0; }
+}
+@keyframes run1 {
+  0%, 49% { top: 0; opacity: 0; }
+  50% { top: 0; opacity: 1; }
+  71% { top: 100%; opacity: 1; }
+  72%, 100% { top: 100%; opacity: 0; }
+}
+
+.num {
+  position: relative; z-index: 1;
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 44px; height: 44px; border-radius: 50%;
+  background: var(--raised); color: var(--ink-muted);
+  border: 1px solid var(--line-strong);
+  font-family: var(--font-display); font-size: 16px; font-weight: 500;
+}
+.s0 .num { animation: light0 var(--cycle) linear infinite; }
+.s1 .num { animation: light1 var(--cycle) linear infinite; }
+.s2 .num { animation: light2 var(--cycle) linear infinite; }
+@keyframes light0 {
+  0%, 2% { background: var(--raised); color: var(--ink-muted); border-color: var(--line-strong); }
+  6%, 30% { background: var(--ink); color: var(--page); border-color: var(--ink); }
+  36%, 100% { background: var(--raised); color: var(--ink-muted); border-color: var(--line-strong); }
+}
+@keyframes light1 {
+  0%, 48% { background: var(--raised); color: var(--ink-muted); border-color: var(--line-strong); }
+  51%, 64% { background: var(--ink); color: var(--page); border-color: var(--ink); }
+  70%, 100% { background: var(--raised); color: var(--ink-muted); border-color: var(--line-strong); }
+}
+@keyframes light2 {
+  0%, 70% { background: var(--raised); color: var(--ink-muted); border-color: var(--line-strong); }
+  73%, 94% { background: var(--ink); color: var(--page); border-color: var(--ink); }
+  100% { background: var(--raised); color: var(--ink-muted); border-color: var(--line-strong); }
+}
+
+.cipherWrap { display: flex; justify-content: center; }
+
+@media (prefers-reduced-motion: reduce) {
+  .signal { animation: none !important; }
+  .num { animation: none !important; }
+}

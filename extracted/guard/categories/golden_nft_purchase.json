@@ -1,0 +1,61 @@
+{
+  "vectors": {
+    "known_collection_fair_price": [
+      40,
+      1,
+      8,
+      120,
+      600,
+      85,
+      105,
+      0
+    ],
+    "rugpull_fresh_collection": [
+      8000,
+      0,
+      0,
+      8000,
+      60,
+      0,
+      4000,
+      1
+    ],
+    "flood_mint_scam": [
+      300,
+      0,
+      1,
+      4000,
+      5,
+      10,
+      500,
+      0
+    ],
+    "new_collection_small": [
+      60,
+      0,
+      0,
+      90,
+      1200,
+      70,
+      110,
+      0
+    ],
+    "moderate_premium": [
+      500,
+      0,
+      0,
+      700,
+      1800,
+      40,
+      300,
+      1
+    ]
+  },
+  "expect": {
+    "known_collection_fair_price": 0,
+    "rugpull_fresh_collection": 2,
+    "flood_mint_scam": 2,
+    "new_collection_small": 0,
+    "moderate_premium": 1
+  }
+}

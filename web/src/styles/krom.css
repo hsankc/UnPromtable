@@ -1,0 +1,124 @@
+/* Krom tasarım sistemi — token'lar + bileşenler. Bu dosyayı değiştirmeden kullan; yeni renk/boyut gerekiyorsa önce token olarak ekle. */
+
+/* Açık tema (varsayılan) */
+:root, [data-theme="light"] {
+  --page:#e4e6ea; --raised:#f4f5f7; --sunken:#cdd1d7;
+  --ink:#15181d; --ink-muted:#3d434c; --ink-subtle:#5a616b;
+  --line:#b9bec6; --line-strong:#767c85; --accent:#1f4fd1;
+  --chrome-100:#ffffff; --chrome-200:#e4e7eb; --chrome-400:#b9bec6; --chrome-600:#8e949c; --chrome-800:#5c626b;
+  --glow-1:#6ea8ff; --glow-2:#00e0d1; --glow-surface:#0a0d18; --on-glow:#ffffff;
+  --cipher-1:#1d4ed8; --cipher-2:#0891b2; --cipher-3:#059669;
+  --ok:#15803d; --warn:#8a5306; --danger:#b42318;
+  --shadow-card:0 30px 60px -30px rgba(14,23,38,0.25);
+  --shadow-badge:0 10px 30px -12px rgba(14,23,38,0.3);
+}
+
+/* Koyu tema */
+[data-theme="dark"] {
+  --page:#0d0f12; --raised:#171a1f; --sunken:#08090b;
+  --ink:#eef0f3; --ink-muted:#b3bac4; --ink-subtle:#8a929e;
+  --line:#2a2f37; --line-strong:#5b6370; --accent:#7fb0ff;
+  --cipher-1:#60a5fa; --cipher-2:#22d3ee; --cipher-3:#34d399;
+  --ok:#4ade80; --warn:#fbbf24; --danger:#f87171;
+  --shadow-card:0 30px 60px -30px rgba(0,0,0,0.7);
+  --shadow-badge:0 10px 30px -12px rgba(0,0,0,0.7);
+}
+
+/* Ölçüler ve fontlar */
+:root {
+  --space-1:4px; --space-2:8px; --space-3:12px; --space-4:16px; --space-6:24px;
+  --space-8:32px; --space-12:48px; --space-16:64px; --space-24:96px;
+  --radius-sm:8px; --radius-md:14px; --radius-lg:28px; --radius-pill:999px;
+  --font-display:"Unbounded", system-ui, sans-serif;
+  --font-sans:"Figtree", system-ui, sans-serif;
+  --font-mono:"JetBrains Mono", ui-monospace, monospace;
+}
+
+/* Tip stilleri */
+.display-xl{font-family:var(--font-display);font-size:104px;line-height:.95;font-weight:700;letter-spacing:-3px}
+.display-l{font-family:var(--font-display);font-size:72px;line-height:1;font-weight:700;letter-spacing:-2px}
+.heading-1{font-family:var(--font-display);font-size:44px;line-height:1.1;font-weight:500;letter-spacing:-1px}
+.heading-2{font-family:var(--font-display);font-size:28px;line-height:1.2;font-weight:500;letter-spacing:-.4px}
+.title{font-family:var(--font-sans);font-size:20px;line-height:1.4;font-weight:600}
+.body-l{font-family:var(--font-sans);font-size:19px;line-height:1.6;font-weight:400}
+.body{font-family:var(--font-sans);font-size:16px;line-height:1.6;font-weight:400}
+.caption{font-family:var(--font-sans);font-size:13px;line-height:1.5;font-weight:500}
+.mono{font-family:var(--font-mono);font-size:13px;line-height:20px;font-weight:400}
+@media (max-width:720px){
+  .display-xl{font-size:56px;letter-spacing:-1.5px}
+  .display-l{font-size:44px;letter-spacing:-1px}
+  .heading-1{font-size:32px}
+}
+
+/* Bileşenler */
+@keyframes krom-shine{0%{background-position:50% 0%}100%{background-position:50% 100%}}
+@keyframes krom-spin{to{transform:translate(-50%,-50%) rotate(360deg)}}
+@keyframes krom-roam{0%{-webkit-mask-position:5% 10%;mask-position:5% 10%}33%{-webkit-mask-position:85% 30%;mask-position:85% 30%}66%{-webkit-mask-position:25% 80%;mask-position:25% 80%}100%{-webkit-mask-position:80% 90%;mask-position:80% 90%}}
+
+.krom-chrome{
+  background:linear-gradient(180deg,var(--chrome-100) 0%,var(--chrome-400) 18%,var(--chrome-100) 34%,var(--chrome-800) 52%,var(--chrome-200) 68%,var(--chrome-600) 84%,var(--chrome-100) 100%);
+  background-size:100% 220%;
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  animation:krom-shine 6s ease-in-out infinite alternate;
+}
+
+.krom-btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:var(--space-2);
+  height:48px;padding:0 var(--space-6);box-sizing:border-box;
+  border:0;border-radius:var(--radius-pill);
+  font-family:var(--font-sans);font-size:15px;font-weight:500;line-height:1;white-space:nowrap;
+  text-decoration:none;cursor:pointer;
+}
+.krom-btn:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.krom-btn--primary{background:var(--ink);color:var(--page)}
+.krom-btn--primary:hover{background:var(--ink-muted)}
+.krom-btn--ghost{background:transparent;color:var(--ink);border:1px solid var(--line-strong)}
+.krom-btn--ghost:hover{background:var(--raised)}
+
+.krom-btn--ring{padding:2px;background:linear-gradient(180deg,var(--chrome-100),var(--chrome-600) 50%,var(--chrome-100))}
+.krom-btn--ring>span{display:flex;align-items:center;gap:var(--space-2);height:100%;padding:0 var(--space-6);border-radius:var(--radius-pill);background:var(--ink);color:var(--page)}
+
+.krom-btn--glow{position:relative;overflow:hidden;isolation:isolate;padding:1.5px;background:var(--line-strong)}
+.krom-btn--glow::before{
+  content:"";position:absolute;left:50%;top:50%;z-index:-1;width:300%;aspect-ratio:1;
+  background:conic-gradient(from 0deg,transparent 0deg,transparent 250deg,var(--glow-1) 300deg,var(--glow-2) 340deg,transparent 360deg);
+  transform:translate(-50%,-50%) rotate(0deg);
+  animation:krom-spin 4s linear infinite;
+}
+.krom-btn--glow:hover::before{animation-duration:2s}
+.krom-btn--glow>span{position:relative;display:flex;align-items:center;gap:var(--space-2);height:100%;padding:0 var(--space-6);border-radius:var(--radius-pill);background:var(--glow-surface);color:var(--on-glow)}
+
+.krom-cipher{
+  position:relative;overflow:hidden;box-sizing:border-box;
+  border-radius:var(--radius-lg);border:1px solid var(--line);
+  background:var(--raised);box-shadow:var(--shadow-card);
+  font-family:var(--font-mono);font-size:13px;line-height:20px;
+}
+.krom-cipher__field,.krom-cipher__glow{position:absolute;inset:0;box-sizing:border-box;padding:var(--space-4);overflow:hidden;word-break:break-all}
+.krom-cipher__field{color:var(--line)}
+.krom-cipher__glow{
+  background:linear-gradient(120deg,var(--cipher-1),var(--cipher-2),var(--cipher-3));
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  -webkit-mask-image:radial-gradient(circle,#000 0%,rgba(0,0,0,.6) 35%,transparent 70%);mask-image:radial-gradient(circle,#000 0%,rgba(0,0,0,.6) 35%,transparent 70%);
+  -webkit-mask-size:360px 360px;mask-size:360px 360px;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;
+  animation:krom-roam 10s ease-in-out infinite alternate;
+}
+.krom-cipher__badge{
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  width:156px;height:156px;border-radius:50%;box-sizing:border-box;
+  border:1px solid var(--line);background:var(--raised);box-shadow:var(--shadow-badge);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
+  color:var(--ink);font-family:var(--font-sans);font-size:16px;font-weight:600;line-height:1.2;
+}
+.krom-cipher__badge small{font-family:var(--font-mono);font-size:12px;font-weight:400;color:var(--ink-subtle)}
+
+@media (prefers-reduced-motion:reduce){
+  .krom-chrome,.krom-btn--glow::before,.krom-cipher__glow{animation:none}
+  .krom-cipher__glow{-webkit-mask-position:50% 50%;mask-position:50% 50%}
+}
+
+/* Unpromptable eklemeleri: yeni ölçüler burada token olarak tanımlanır. */
+:root {
+  --container:1200px; --gutter:var(--space-6); --header-h:72px; --sidebar-w:248px;
+  --ease-brand:cubic-bezier(.16,.84,.24,1);
+}

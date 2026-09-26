@@ -1,0 +1,21 @@
+.gap { margin-top: var(--space-8); }
+.treasuryRow { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-4); }
+.addr { margin-top: var(--space-1); }
+.mine {
+  display: inline-flex; align-items: center; height: 28px; padding: 0 var(--space-3);
+  border-radius: var(--radius-pill); background: var(--ok); color: var(--page);
+  font-size: 13px; font-weight: 600;
+}
+
+.list { list-style: none; margin: 0; padding: 0; }
+.row {
+  display: grid; grid-template-columns: minmax(140px, auto) minmax(0, 1fr) auto auto auto;
+  align-items: center; gap: var(--space-4);
+  padding: var(--space-3) 0; border-bottom: 1px solid var(--line);
+}
+.row:last-child { border-bottom: 0; }
+.kind { font-size: 14px; font-weight: 500; }
+
+@media (max-width: 720px) {
+  .row { grid-template-columns: minmax(0, 1fr) auto; row-gap: 2px; }
+}

@@ -1,0 +1,16 @@
+.connectRow, .section { margin-top: var(--space-8); }
+
+.vaultList { list-style: none; margin: 0; padding: 0; }
+.vaultRow {
+  display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-4);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--line);
+}
+.vaultRow:last-child { border-bottom: 0; }
+.vaultRow > :last-child { margin-left: auto; }
+
+.v1 {
+  display: inline-flex; align-items: center; height: 20px; padding: 0 var(--space-2);
+  border: 1px solid var(--line-strong); border-radius: var(--radius-pill);
+  font-size: 11px; font-weight: 600; color: var(--ink-subtle);
+}

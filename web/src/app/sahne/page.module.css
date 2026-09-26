@@ -1,0 +1,30 @@
+.page { display: flex; flex-direction: column; gap: var(--space-8); min-height: 100svh; padding: var(--space-8) var(--space-12); }
+
+.header { display: flex; align-items: center; justify-content: space-between; }
+.brand { color: var(--ink); }
+.qr { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+.qrUrl { color: var(--accent); font-size: 15px; }
+
+.topStrip { display: flex; gap: var(--space-12); align-items: flex-end; flex-wrap: wrap; }
+.blocked { display: flex; flex-direction: column; gap: var(--space-1); }
+.blockedNum { font-family: var(--font-display); font-size: 64px; font-weight: 600; }
+.blockedNum small { font-family: var(--font-sans); font-size: 22px; color: var(--ink-muted); font-weight: 500; }
+
+.budget { flex: 1; min-width: 260px; max-width: 420px; display: flex; flex-direction: column; gap: var(--space-2); }
+.budgetBar { height: 14px; border-radius: var(--radius-pill); background: var(--sunken); overflow: hidden; }
+.budgetFill { height: 100%; border-radius: var(--radius-pill); background: var(--ok); transition: width 600ms var(--ease-brand); }
+
+.feed {
+  flex: 1; min-height: 0; overflow-y: auto;
+  padding: var(--space-4) var(--space-6);
+  background: var(--raised); border: 1px solid var(--line); border-radius: var(--radius-lg);
+  font-size: 18px;
+}
+
+.agents { display: flex; gap: var(--space-6); flex-wrap: wrap; }
+
+@media (max-width: 900px) {
+  .page { padding: var(--space-6); }
+  .blockedNum { font-size: 44px; }
+  .agents { flex-direction: column; }
+}

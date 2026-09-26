@@ -1,0 +1,19 @@
+{
+  "name": "agent",
+  "version": "1.0.0",
+  "description": "Keyless agent thinker + relayer pool for KeylessVault",
+  "type": "module",
+  "scripts": {
+    "demo": "tsx src/index.ts"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "dotenv": "^18.0.3",
+    "viem": "^2.56.8"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.2",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  }
+}

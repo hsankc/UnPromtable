@@ -1,0 +1,61 @@
+{
+  "vectors": {
+    "known_pair_small": [
+      20,
+      1,
+      15,
+      90,
+      600,
+      90,
+      30,
+      0
+    ],
+    "honeypot_new_token": [
+      9000,
+      0,
+      0,
+      9000,
+      120,
+      0,
+      4500,
+      1
+    ],
+    "salami_swap_drain": [
+      150,
+      0,
+      1,
+      4200,
+      8,
+      5,
+      600,
+      0
+    ],
+    "new_token_small_amt": [
+      30,
+      0,
+      0,
+      60,
+      1200,
+      60,
+      80,
+      1
+    ],
+    "moderate_slippage": [
+      600,
+      0,
+      0,
+      900,
+      1800,
+      45,
+      600,
+      0
+    ]
+  },
+  "expect": {
+    "known_pair_small": 0,
+    "honeypot_new_token": 2,
+    "salami_swap_drain": 2,
+    "new_token_small_amt": 0,
+    "moderate_slippage": 1
+  }
+}

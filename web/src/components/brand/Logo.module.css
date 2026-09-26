@@ -1,0 +1,3 @@
+.logo { flex: none; }
+.chev { stroke: var(--ink-subtle); }
+.ink { fill: var(--ink); }

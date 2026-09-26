@@ -1,0 +1,61 @@
+{
+  "vectors": {
+    "regular_follower_tip": [
+      3,
+      1,
+      10,
+      15,
+      600,
+      85,
+      100,
+      0
+    ],
+    "disguised_big_tip": [
+      7000,
+      0,
+      0,
+      7000,
+      60,
+      0,
+      4000,
+      0
+    ],
+    "sybil_microtip_drain": [
+      20,
+      0,
+      0,
+      3000,
+      1,
+      5,
+      150,
+      0
+    ],
+    "new_recipient_small": [
+      5,
+      0,
+      0,
+      8,
+      900,
+      55,
+      110,
+      0
+    ],
+    "contract_recipient_flag": [
+      10,
+      0,
+      0,
+      15,
+      1200,
+      40,
+      120,
+      1
+    ]
+  },
+  "expect": {
+    "regular_follower_tip": 0,
+    "disguised_big_tip": 2,
+    "sybil_microtip_drain": 2,
+    "new_recipient_small": 0,
+    "contract_recipient_flag": 1
+  }
+}
